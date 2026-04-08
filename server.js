@@ -37,4 +37,4 @@ app.use("/api/suppliers", supplierRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-app.listen(5000, () => console.log("Server running on 5000"));
+app.listen(5001, () => console.log("Server running on 5001"));
