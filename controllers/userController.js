@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import { createNotification } from "../utils/createNotification.js";
 
 
 // 🔹 Create User
@@ -20,14 +21,19 @@ export const createUser = async (req, res) => {
       password: hashedPassword,
       role,
       employee,
-
-      // 🔥 ADMIN SETS THIS
       permissions: permissions || {
         create: false,
         read: true,
         update: false,
         delete: false,
       },
+    });
+
+    // 🔔 NOTIFICATION (User Created)
+    await Notification.create({
+      message: `New user created: ${user.name} (${user.role})`,
+      user: user._id,
+      read: false,
     });
 
     res.status(201).json(user);
@@ -104,6 +110,13 @@ export const deleteUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
+
+    // 🔔 NOTIFICATION (User Deleted)
+    await Notification.create({
+      message: `User deleted: ${user.name} (${user.email})`,
+      user: null,
+      read: false,
+    });
 
     res.json({ msg: "User deleted successfully" });
   } catch (error) {
