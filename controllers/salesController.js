@@ -1,9 +1,36 @@
 import Sale from "../models/Sale.js";
+import Product from "../models/Product.js";
 
 // Create a new sale
 export const createSale = async (req, res) => {
   try {
+    const { products } = req.body;
+
+    // 🔴 CHECK STOCK FIRST
+    for (let item of products) {
+      const product = await Product.findById(item.product);
+
+      if (!product) {
+        return res.status(404).json({ msg: "Product not found" });
+      }
+
+      if (product.stock < item.quantity) {
+        return res.status(400).json({
+          msg: `${product.name} has only ${product.stock} in stock`,
+        });
+      }
+    }
+
+    // ✅ CREATE SALE
     const sale = await Sale.create(req.body);
+
+    // 🔥 UPDATE STOCK
+    for (let item of products) {
+      await Product.findByIdAndUpdate(item.product, {
+        $inc: { stock: -item.quantity }, // decrease stock
+      });
+    }
+
     res.json(sale);
   } catch (error) {
     res.status(500).json({ msg: "Error creating sale", error: error.message });
