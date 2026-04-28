@@ -13,27 +13,19 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({ msg: "No token provided" });
     }
 
-    // Remove "Bearer " if present
     if (token.startsWith("Bearer ")) {
       token = token.split(" ")[1];
     }
 
-    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Get full user info
     const user = await User.findById(decoded.id);
-    if (!user) return res.status(401).json({ msg: "User not found" });
 
-    req.user = user;
-
-    // Admin bypasses department check
-    if (user.role === "admin") {
-      req.department = "Admin";
-    } else {
-      // Optional: department field on user for employees
-      req.department = user.department || null;
+    if (!user) {
+      return res.status(401).json({ msg: "User not found" });
     }
+
+    req.user = user; // ✅ latest user with permissions
 
     next();
   } catch (err) {

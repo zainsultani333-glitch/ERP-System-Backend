@@ -14,6 +14,9 @@ import categoryRoutes from "./routes/categoryRoutes.js";
 import companyRoutes from "./routes/companyRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import supplierRoutes from "./routes/supplierRoutes.js";
+import dashboardRoutes from "./routes/AccountsDashboardRoutes.js";
+import hrDashboardRoutes from "./routes/hrDashboardRoutes.js";
+import adminDashboardRoutes from "./routes/adminDashboardRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -25,6 +28,9 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("DB Connected"))
   .catch(err => console.log(err));
 
+app.use("/api/admin-dashboard", adminDashboardRoutes);
+app.use("/api/hr-dashboard", hrDashboardRoutes);
+app.use("/api/accountdashboard", dashboardRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/categories", categoryRoutes);

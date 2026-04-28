@@ -5,15 +5,13 @@ import bcrypt from "bcryptjs";
 // 🔹 Create User
 export const createUser = async (req, res) => {
   try {
-    const { name, email, password, role, employee } = req.body;
+    const { name, email, password, role, employee, permissions } = req.body;
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ msg: "User already exists" });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
@@ -21,7 +19,15 @@ export const createUser = async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      employee
+      employee,
+
+      // 🔥 ADMIN SETS THIS
+      permissions: permissions || {
+        create: false,
+        read: true,
+        update: false,
+        delete: false,
+      },
     });
 
     res.status(201).json(user);
@@ -34,7 +40,7 @@ export const createUser = async (req, res) => {
 // 🔹 Get All Users
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find().populate("employee");
+    const users = await User.find(); // ✅ simple & correct
     res.json(users);
   } catch (error) {
     res.status(500).json({ msg: error.message });
@@ -61,17 +67,22 @@ export const getUserById = async (req, res) => {
 // 🔹 Update User
 export const updateUser = async (req, res) => {
   try {
-    const { password } = req.body;
+    const { password, permissions, ...rest } = req.body;
 
-    // If password is updated → hash it
-    if (password) {
-      req.body.password = await bcrypt.hash(password, 10);
+    const updateData = {
+      ...rest,
+      permissions,
+    };
+
+    // ✅ only update password if provided
+    if (password && password.trim() !== "") {
+      updateData.password = await bcrypt.hash(password, 10);
     }
 
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      req.body,
-      { new: true }
+      updateData,
+      { returnDocument: "after" }
     );
 
     if (!user) {
